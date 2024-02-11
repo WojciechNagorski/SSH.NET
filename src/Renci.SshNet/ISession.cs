@@ -123,6 +123,8 @@ namespace Renci.SshNet
         /// <exception cref="InvalidOperationException">The size of the packet exceeds the maximum size defined by the protocol.</exception>
         void SendMessage(Message message);
 
+        Task SendMessageAsync(Message message, CancellationToken token);
+
         /// <summary>
         /// Sends a message to the server.
         /// </summary>
