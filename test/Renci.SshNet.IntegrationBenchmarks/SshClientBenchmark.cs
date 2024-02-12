@@ -59,6 +59,15 @@ namespace Renci.SshNet.IntegrationBenchmarks
         }
 
         [Benchmark]
+        public async Task<string> ConnectAndRunCommandAsync()
+        {
+            using var sshClient = new SshClient(_infrastructureFixture.SshServerHostName, _infrastructureFixture.SshServerPort, _infrastructureFixture.User.UserName, _infrastructureFixture.User.Password);
+            await sshClient.ConnectAsync(CancellationToken.None).ConfigureAwait(false);
+            var result = await sshClient.RunCommandAsync("echo $'test !@#$%^&*()_+{}:,./<>[];\\|'", CancellationToken.None);
+            return result.Result;
+        }
+
+        [Benchmark]
         public async Task<string> ConnectAsyncAndRunCommand()
         {
             using var sshClient = new SshClient(_infrastructureFixture.SshServerHostName, _infrastructureFixture.SshServerPort, _infrastructureFixture.User.UserName, _infrastructureFixture.User.Password);
@@ -70,6 +79,13 @@ namespace Renci.SshNet.IntegrationBenchmarks
         public string RunCommand()
         {
             return _sshClient!.RunCommand("echo $'test !@#$%^&*()_+{}:,./<>[];\\|'").Result;
+        }
+
+        [Benchmark]
+        public async Task<string> RunCommandAsync()
+        {
+            var result = await _sshClient!.RunCommandAsync("echo $'test !@#$%^&*()_+{}:,./<>[];\\|'", CancellationToken.None).ConfigureAwait(false);
+            return result.Result;
         }
 
         [Benchmark]

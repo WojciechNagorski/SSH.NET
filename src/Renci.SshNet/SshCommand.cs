@@ -4,6 +4,9 @@ using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
+#if NET6_0_OR_GREATER
+using System.Threading.Tasks;
+#endif
 
 using Renci.SshNet.Abstractions;
 using Renci.SshNet.Channels;
@@ -364,6 +367,91 @@ namespace Renci.SshNet
         {
             return EndExecute(BeginExecute(callback: null, state: null));
         }
+
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Executes command specified by <see cref="CommandText"/> property.
+        /// </summary>
+        /// <returns>
+        /// Command execution result.
+        /// </returns>
+        /// <exception cref="SshConnectionException">Client is not connected.</exception>
+        /// <exception cref="SshOperationTimeoutException">Operation has timed out.</exception>
+        public async Task<string> ExecuteAsync(CancellationToken token)
+        {
+            // Prevent from executing BeginExecute before calling EndExecute
+            if (_asyncResult != null && !_asyncResult.EndCalled)
+            {
+                throw new InvalidOperationException("Asynchronous operation is already in progress.");
+            }
+
+            // Create new AsyncResult object
+            _asyncResult = new CommandAsyncResult
+                {
+                    AsyncWaitHandle = new ManualResetEvent(initialState: false),
+                    IsCompleted = false,
+                    AsyncState = null,
+                };
+
+            if (_channel is not null)
+            {
+                throw new SshException("Invalid operation.");
+            }
+
+            if (string.IsNullOrEmpty(CommandText))
+            {
+                throw new ArgumentException("CommandText property is empty.");
+            }
+
+            var outputStream = OutputStream;
+            if (outputStream is not null)
+            {
+                await outputStream.DisposeAsync().ConfigureAwait(false);
+                OutputStream = null;
+            }
+
+            var extendedOutputStream = ExtendedOutputStream;
+            if (extendedOutputStream is not null)
+            {
+                await extendedOutputStream.DisposeAsync().ConfigureAwait(false);
+                ExtendedOutputStream = null;
+            }
+
+            // Initialize output streams
+            OutputStream = new PipeStream();
+            ExtendedOutputStream = new PipeStream();
+
+            _result = null;
+            _error = null;
+            _callback = null;
+
+            _channel = CreateChannel();
+            await _channel.OpenAsync(token).ConfigureAwait(false);
+
+            _ = await _channel.SendExecRequestAsync(CommandText, token).ConfigureAwait(false);
+
+            lock (_endExecuteLock)
+            {
+                if (_asyncResult.EndCalled)
+                {
+                    throw new ArgumentException("EndExecute can only be called once for each asynchronous operation.");
+                }
+
+
+                // wait for operation to complete (or time out)
+                WaitOnHandle(_asyncResult.AsyncWaitHandle);
+                // We have to close input stream after the operation is completed. In async execution user have to close Input string itself.
+                _inputStream?.Close();
+
+                UnsubscribeFromEventsAndDisposeChannel(_channel);
+                _channel = null;
+
+                _asyncResult.EndCalled = true;
+
+                return Result;
+            }
+        }
+#endif
 
         /// <summary>
         /// Executes the specified command text.

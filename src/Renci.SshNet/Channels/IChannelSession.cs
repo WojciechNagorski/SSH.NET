@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
+
 using Renci.SshNet.Common;
 
 namespace Renci.SshNet.Channels
@@ -12,6 +15,13 @@ namespace Renci.SshNet.Channels
         /// Opens the channel.
         /// </summary>
         void Open();
+
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Opens the channel.
+        /// </summary>
+        Task OpenAsync(CancellationToken token);
+#endif
 
         /// <summary>
         /// Sends the pseudo terminal request.
@@ -70,6 +80,18 @@ namespace Renci.SshNet.Channels
         /// <see langword="true"/> if request was successful; otherwise <see langword="false"/>.
         /// </returns>
         bool SendExecRequest(string command);
+
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Sends the exec request.
+        /// </summary>
+        /// <param name="command">The command.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>
+        /// <see langword="true"/> if request was successful; otherwise <see langword="false"/>.
+        /// </returns>
+        Task<bool> SendExecRequestAsync(string command, CancellationToken token);
+#endif
 
         /// <summary>
         /// Sends the exec request.

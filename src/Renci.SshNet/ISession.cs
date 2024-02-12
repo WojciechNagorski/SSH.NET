@@ -123,7 +123,17 @@ namespace Renci.SshNet
         /// <exception cref="InvalidOperationException">The size of the packet exceeds the maximum size defined by the protocol.</exception>
         void SendMessage(Message message);
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Sends a message to the server.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <exception cref="SshConnectionException">The client is not connected.</exception>
+        /// <exception cref="SshOperationTimeoutException">The operation timed out.</exception>
+        /// <exception cref="InvalidOperationException">The size of the packet exceeds the maximum size defined by the protocol.</exception>
         Task SendMessageAsync(Message message, CancellationToken token);
+#endif
 
         /// <summary>
         /// Sends a message to the server.
