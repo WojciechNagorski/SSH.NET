@@ -4,8 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Text;
+#if NET6_0_OR_GREATER
 using System.Threading;
 using System.Threading.Tasks;
+#endif
 
 using Renci.SshNet.Common;
 

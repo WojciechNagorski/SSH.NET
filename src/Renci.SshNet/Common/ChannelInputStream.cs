@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+#if NET6_0_OR_GREATER
 using System.Threading;
 using System.Threading.Tasks;
+#endif
 
 using Renci.SshNet.Channels;
 
@@ -139,14 +141,15 @@ namespace Renci.SshNet.Common
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
-        /// <param name="token">The cancellation token.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         /// <exception cref="IOException">An I/O error occurs.</exception>
         /// <exception cref="NotSupportedException">The stream does not support writing.</exception>
         /// <exception cref="ObjectDisposedException">Methods were called after the stream was closed.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">The sum of offset and count is greater than the buffer length.</exception>
         /// <exception cref="ArgumentOutOfRangeException">offset or count is negative.</exception>
-        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken token)
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (buffer == null)
             {
@@ -173,8 +176,15 @@ namespace Renci.SshNet.Common
                 return;
             }
 
-            await _channel.SendDataAsync(buffer, offset, count, token).ConfigureAwait(false);
+            await _channel.SendDataAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
             _totalPosition += count;
+        }
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+#pragma warning disable CA1835 // Prefer the 'Memory'-based overloads for 'ReadAsync' and 'WriteAsync'
+            await WriteAsync(buffer.ToArray(), 0, buffer.Length, cancellationToken: cancellationToken).ConfigureAwait(false);
+#pragma warning restore CA1835 // Prefer the 'Memory'-based overloads for 'ReadAsync' and 'WriteAsync'
         }
 #endif
 

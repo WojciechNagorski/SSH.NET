@@ -129,6 +129,7 @@ namespace Renci.SshNet
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         /// <exception cref="SshConnectionException">The client is not connected.</exception>
         /// <exception cref="SshOperationTimeoutException">The operation timed out.</exception>
         /// <exception cref="InvalidOperationException">The size of the packet exceeds the maximum size defined by the protocol.</exception>

@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Threading.Tasks;
+#if NET6_0_OR_GREATER
 using System.Threading;
+using System.Threading.Tasks;
+#endif
 
 using Renci.SshNet.Common;
 using Renci.SshNet.Messages.Connection;
@@ -114,6 +116,7 @@ namespace Renci.SshNet.Channels
         /// <param name="offset">The zero-based offset in <paramref name="data"/> at which to begin taking data from.</param>
         /// <param name="size">The number of bytes of <paramref name="data"/> to send.</param>
         /// <param name="token">The cancellation token.</param>
+        /// <returns>The task.</returns>
         /// <remarks>
         /// <para>
         /// When the size of the data to send exceeds the maximum packet size or the remote window

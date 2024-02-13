@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
+#if NET6_0_OR_GREATER
 using System.Threading.Tasks;
+#endif
 
 using Renci.SshNet.Common;
 using Renci.SshNet.Messages.Connection;
@@ -92,6 +94,8 @@ namespace Renci.SshNet.Channels
         /// <summary>
         /// Opens the channel.
         /// </summary>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         public async Task OpenAsync(CancellationToken token)
         {
             // Try to open channel several times
@@ -238,13 +242,12 @@ namespace Renci.SshNet.Channels
         /// </summary>
         /// <param name="command">The command.</param>
         /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// <see langword="true"/> if request was successful; otherwise <see langword="false"/>.
-        /// </returns>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation with
+        /// value <see langword="true"/> if request was successful; otherwise <see langword="false"/>.</returns>
         public async Task<bool> SendExecRequestAsync(string command, CancellationToken token)
         {
             _ = _channelRequestResponse.Reset();
-            await SendMessageAsync(new ChannelRequestMessage(RemoteChannelNumber, new ExecRequestInfo(command, ConnectionInfo.Encoding)), token);
+            await SendMessageAsync(new ChannelRequestMessage(RemoteChannelNumber, new ExecRequestInfo(command, ConnectionInfo.Encoding)), token).ConfigureAwait(false);
             WaitOnHandle(_channelRequestResponse);
             return _channelRequestSucces;
         }
@@ -501,11 +504,12 @@ namespace Renci.SshNet.Channels
             // had a response on the previous attempt for the current channel
             if (Interlocked.CompareExchange(ref _sessionSemaphoreObtained, 1, 0) == 0)
             {
-                await SessionSemaphore.WaitAsync(token);
+                await SessionSemaphore.WaitAsync(token).ConfigureAwait(true);
                 await SendMessageAsync(new ChannelOpenMessage(LocalChannelNumber,
                                                               LocalWindowSize,
                                                               LocalPacketSize,
-                                                              new SessionChannelOpenInfo()), token).ConfigureAwait(false);
+                                                              new SessionChannelOpenInfo()),
+                                       token).ConfigureAwait(false);
             }
         }
 #endif

@@ -63,16 +63,8 @@ namespace Renci.SshNet.IntegrationBenchmarks
         {
             using var sshClient = new SshClient(_infrastructureFixture.SshServerHostName, _infrastructureFixture.SshServerPort, _infrastructureFixture.User.UserName, _infrastructureFixture.User.Password);
             await sshClient.ConnectAsync(CancellationToken.None).ConfigureAwait(false);
-            var result = await sshClient.RunCommandAsync("echo $'test !@#$%^&*()_+{}:,./<>[];\\|'", CancellationToken.None);
+            var result = await sshClient.RunCommandAsync("echo $'test !@#$%^&*()_+{}:,./<>[];\\|'", CancellationToken.None).ConfigureAwait(false);
             return result.Result;
-        }
-
-        [Benchmark]
-        public async Task<string> ConnectAsyncAndRunCommand()
-        {
-            using var sshClient = new SshClient(_infrastructureFixture.SshServerHostName, _infrastructureFixture.SshServerPort, _infrastructureFixture.User.UserName, _infrastructureFixture.User.Password);
-            await sshClient.ConnectAsync(CancellationToken.None).ConfigureAwait(false);
-            return sshClient.RunCommand("echo $'test !@#$%^&*()_+{}:,./<>[];\\|'").Result;
         }
 
         [Benchmark]

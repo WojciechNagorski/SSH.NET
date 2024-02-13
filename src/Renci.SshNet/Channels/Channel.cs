@@ -541,6 +541,7 @@ namespace Renci.SshNet.Channels
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         protected async Task SendMessageAsync(Message message, CancellationToken token)
         {
             // Send channel messages only while channel is open
@@ -549,9 +550,10 @@ namespace Renci.SshNet.Channels
                 return;
             }
 
-            await _session.SendMessageAsync(message, token);
+            await _session.SendMessageAsync(message, token).ConfigureAwait(false);
         }
 #endif
+
         /// <summary>
         /// Sends a SSH_MSG_CHANNEL_EOF message to the remote server.
         /// </summary>

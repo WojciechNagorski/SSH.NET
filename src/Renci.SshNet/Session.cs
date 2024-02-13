@@ -749,7 +749,12 @@ namespace Renci.SshNet
                 // Send our key exchange init.
                 // We need to do this before starting the message listener to avoid the case where we receive the server
                 // key exchange init and we continue the key exchange before having sent our own init.
+
+#if NET6_0_OR_GREATER
+                await SendMessageAsync(ClientInitMessage, cancellationToken).ConfigureAwait(false);
+#else
                 SendMessage(ClientInitMessage);
+#endif
 
                 // Mark the message listener threads as started
                 _ = _messageListenerCompleted.Reset();
@@ -769,7 +774,11 @@ namespace Renci.SshNet
                 }
 
                 // Request user authorization service
+#if NET6_0_OR_GREATER
+                await SendMessageAsync(new ServiceRequestMessage(ServiceName.UserAuthentication), cancellationToken).ConfigureAwait(false);
+#else
                 SendMessage(new ServiceRequestMessage(ServiceName.UserAuthentication));
+#endif
 
                 // Wait for service to be accepted
                 WaitOnHandle(_serviceAccepted);
@@ -1121,6 +1130,7 @@ namespace Renci.SshNet
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         /// <exception cref="SshConnectionException">The client is not connected.</exception>
         /// <exception cref="SshOperationTimeoutException">The operation timed out.</exception>
         /// <exception cref="InvalidOperationException">The size of the packet exceeds the maximum size defined by the protocol.</exception>
@@ -1144,7 +1154,7 @@ namespace Renci.SshNet
 
             // take a write lock to ensure the outbound packet sequence number is incremented
             // atomically, and only after the packet has actually been sent
-            await _socketWriteLock.WaitAsync(token);
+            await _socketWriteLock.WaitAsync(token).ConfigureAwait(false);
             try
             {
                 byte[] hash = null;
@@ -1201,6 +1211,7 @@ namespace Renci.SshNet
         }
 
 #endif
+
         /// <summary>
         /// Sends an SSH packet to the server.
         /// </summary>
@@ -1243,6 +1254,7 @@ namespace Renci.SshNet
         /// </summary>
         /// <param name="data">A read only byte memory containing the packet to send.</param>
         /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         /// <exception cref="SshConnectionException">Client is not connected to the server.</exception>
         /// <remarks>
         /// <para>
@@ -1256,7 +1268,7 @@ namespace Renci.SshNet
         /// </remarks>
         private async Task SendPacketAsync(ReadOnlyMemory<byte> data, CancellationToken token)
         {
-            await _socketDisposeLock.WaitAsync(token);
+            await _socketDisposeLock.WaitAsync(token).ConfigureAwait(false);
 
             try
             {
@@ -2335,7 +2347,8 @@ namespace Renci.SshNet
         /// Sends a message to the server.
         /// </summary>
         /// <param name="message">The message to send.</param>
-        /// <param name="token">The cancellation token</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         /// <exception cref="SshConnectionException">The client is not connected.</exception>
         /// <exception cref="SshOperationTimeoutException">The operation timed out.</exception>
         /// <exception cref="InvalidOperationException">The size of the packet exceeds the maximum size defined by the protocol.</exception>
@@ -2344,6 +2357,7 @@ namespace Renci.SshNet
             await SendMessageAsync(message, token).ConfigureAwait(false);
         }
 #endif
+
         /// <summary>
         /// Sends a message to the server.
         /// </summary>

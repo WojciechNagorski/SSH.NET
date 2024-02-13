@@ -368,10 +368,27 @@ namespace Renci.SshNet
             return EndExecute(BeginExecute(callback: null, state: null));
         }
 
+        /// <summary>
+        /// Executes the specified command text.
+        /// </summary>
+        /// <param name="commandText">The command text.</param>
+        /// <returns>
+        /// The result of the command execution.
+        /// </returns>
+        /// <exception cref="SshConnectionException">Client is not connected.</exception>
+        /// <exception cref="SshOperationTimeoutException">Operation has timed out.</exception>
+        public string Execute(string commandText)
+        {
+            CommandText = commandText;
+
+            return Execute();
+        }
+
 #if NET6_0_OR_GREATER
         /// <summary>
         /// Executes command specified by <see cref="CommandText"/> property.
         /// </summary>
+        /// <param name="token">The cancellation token.</param>
         /// <returns>
         /// Command execution result.
         /// </returns>
@@ -437,11 +454,11 @@ namespace Renci.SshNet
                     throw new ArgumentException("EndExecute can only be called once for each asynchronous operation.");
                 }
 
+                // TODO I have no idea where it should be right now.
+                _inputStream?.Close();
 
                 // wait for operation to complete (or time out)
                 WaitOnHandle(_asyncResult.AsyncWaitHandle);
-                // We have to close input stream after the operation is completed. In async execution user have to close Input string itself.
-                _inputStream?.Close();
 
                 UnsubscribeFromEventsAndDisposeChannel(_channel);
                 _channel = null;
@@ -451,23 +468,22 @@ namespace Renci.SshNet
                 return Result;
             }
         }
-#endif
 
         /// <summary>
         /// Executes the specified command text.
         /// </summary>
         /// <param name="commandText">The command text.</param>
-        /// <returns>
-        /// The result of the command execution.
-        /// </returns>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation with result of the command execution.</returns>
         /// <exception cref="SshConnectionException">Client is not connected.</exception>
         /// <exception cref="SshOperationTimeoutException">Operation has timed out.</exception>
-        public string Execute(string commandText)
+        public async Task<string> ExecuteAsync(string commandText, CancellationToken token)
         {
             CommandText = commandText;
 
-            return Execute();
+            return await ExecuteAsync(token).ConfigureAwait(false);
         }
+#endif
 
         private IChannelSession CreateChannel()
         {

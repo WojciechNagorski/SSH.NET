@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+#if NET6_0_OR_GREATER
 using System.Threading;
+using System.Threading.Tasks;
+#endif
 
 using Renci.SshNet.Common;
 
@@ -20,6 +22,8 @@ namespace Renci.SshNet.Channels
         /// <summary>
         /// Opens the channel.
         /// </summary>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation.</returns>
         Task OpenAsync(CancellationToken token);
 #endif
 
@@ -87,9 +91,8 @@ namespace Renci.SshNet.Channels
         /// </summary>
         /// <param name="command">The command.</param>
         /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// <see langword="true"/> if request was successful; otherwise <see langword="false"/>.
-        /// </returns>
+        /// <returns>A <see cref="Task"/> that represents the asynchronous connect operation with
+        /// value <see langword="true"/> if request was successful; otherwise <see langword="false"/>.</returns>
         Task<bool> SendExecRequestAsync(string command, CancellationToken token);
 #endif
 
